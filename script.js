@@ -263,29 +263,47 @@
   function fitCanvas(){
     // keep internal resolution fixed but adjust well DOM
     W = canvas.width; H = canvas.height;
-    well = { x: W*0.20, y: 10, width: W*0.60, height: H-20 };
+    // On small screens, make the well wider
+        if (window.innerWidth <= 400) {
+          well = { x: W*0.04, y: 10, width: W*0.92, height: H-20 };
+        } else if (window.innerWidth < 500) {
+          well = { x: W*0.10, y: 10, width: W*0.80, height: H-20 };
+        } else {
+          well = { x: W*0.20, y: 10, width: W*0.60, height: H-20 };
+        }
     wellBox.style.left = (well.x / W * 100) + '%';
     wellBox.style.right = ((W - (well.x + well.width))/W * 100) + '%';
     wellBox.style.top = well.y + 'px';
     wellBox.style.bottom = (H - (well.y + well.height)) + 'px';
-  // Constrain jerryX so the jerrycan stays fully inside the well
-  const jerryHalf = 56/2;
-  jerryX = Math.max(well.x + jerryHalf, Math.min(well.x + well.width - jerryHalf, jerryX));
-  jerryTargetX = jerryX;
+    // Constrain jerryX so the jerrycan stays fully inside the well
+    // Use actual jerrycan width for calculation (responsive)
+    let jerryWidth = 56;
+        if (window.innerWidth <= 400) {
+          jerryWidth = 28; // even smaller jerrycan for very small screens
+        } else if (window.innerWidth < 500) {
+          jerryWidth = 40; // smaller jerrycan for small screens
+        }
+    const jerryHalf = jerryWidth / 2;
+    // Constrain jerryX so the jerrycan stays fully inside the well
+    jerryX = Math.max(well.x + jerryHalf, Math.min(well.x + well.width - jerryHalf, jerryX));
+    jerryTargetX = jerryX;
     addBoundaries();
   }
 
   function renderJerry(){
     // Use the jerry-can-UD.png image instead of SVG
     jerryEl.innerHTML = '';
-    const size = 56;
+    let size = 56;
+    if (window.innerWidth < 500) {
+      size = 40;
+    }
     const img = document.createElement('img');
     img.src = 'img/jerry-can-UD.png';
     img.alt = 'Jerrycan';
-  img.style.display = 'block';
-  img.style.maxWidth = size + 'px';
-  img.style.height = 'auto';
-  img.style.marginBottom = '6px'; // slight bottom margin for spacing
+    img.style.display = 'block';
+    img.style.maxWidth = size + 'px';
+    img.style.height = 'auto';
+    img.style.marginBottom = '6px'; // slight bottom margin for spacing
     jerryEl.appendChild(img);
     jerryEl.style.left = (jerryX - size/2) + 'px';
   }
