@@ -1,3 +1,9 @@
+/* Home button in game over popup */
+#gameOverModal .settingsBtn {
+  background: #BF6C46 !important;
+  color: #fff !important;
+  border: none !important;
+}
 /* Charity: water Brand Colors
 
 Primary Colors:
@@ -13,3 +19,197 @@ Secondary Colors:
 - Pink:       #F16061
 
 */
+
+
+:root{
+  --bg:#FFF7E1;
+  --panel:#ffffff;
+  --accent:#f2b01e;
+  --well:#dbeefc;
+  --text:#1c2a37;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:rgba(255,247,225,0.5);font-family:Inter, system-ui, Arial, sans-serif;color:var(--text);}
+html,body{height:100%;margin:0;background:rgba(255,247,225,0.5);font-family:Inter, system-ui, Arial, sans-serif;color:#1a1a1a;}
+.container{max-width:920px;margin:20px auto;padding:12px;}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.hud{display:flex;gap:10px;align-items:center;}
+.card{
+  background:#fff9e8 !important;
+    color:#1a1a1a;
+    padding:0 12px;
+    border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.06);
+    height:44px;
+    display:flex;
+    align-items:center;
+    border: 2px solid #FFC907; /* thin yellow outline */
+}
+.controls{display:flex;gap:8px;align-items:center;}
+.settingsBtn{
+  background:#fff9e8 !important;
+    color:#1a1a1a;
+    border:2px solid #FFC907; /* thin yellow outline */
+    padding:10px 16px;
+    border-radius:12px;
+    font-size:20px;
+    cursor:pointer;
+}
+
+/* Home button in win popup */
+#winModal .settingsBtn {
+  background: #BF6C46 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.startBtn{
+  background:#77a8bb;
+  color:#fff;
+  padding:10px 24px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-weight:700;
+  font-size:20px;
+}
+
+#gameArea{
+  background: #FFF7E1;
+  border-radius:8px;
+  padding:12px;
+  box-shadow:0 8px 20px rgba(20,40,80,0.06);
+  border: 2px solid #FFC907; /* thin yellow border */
+}
+.topRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.topLeft {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.hud {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.previewBox {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  position: static;
+  transform: none;
+  top: auto;
+  border: 2px solid #FFC907; /* thin yellow outline */
+  background:#fff9e8 !important;
+    color:#1a1a1a;
+}
+
+.controls {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+
+.hud {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.previewBox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.controls {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  margin-left: auto;
+  gap: 8px;
+}
+.previewBox{display:flex;gap:16px;align-items:center;background:rgba(255,247,225,0.5);padding:6px;border-radius:8px;}
+
+/* Center previewBox above well */
+.previewBox {
+  margin: 0 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.previewCircle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;}
+.instructionsInline{font-size:13px;color:#556;}
+
+
+/* Make canvasWrap 20% taller to accommodate taller wellBox */
+#canvasWrap{position:relative;background:transparent;border-radius:6px;padding:32px 8px 8px 8px;height:624px;overflow:hidden;margin-top:25px;}
+canvas{display:block;background:transparent;border-radius:6px;width:100%;height:100%;position:absolute;left:0;top:0;z-index:10;}
+.wellBox{position:absolute;left:17%;right:17%;top:190px;bottom:20px;border:3px solid #CBCCD1;border-radius:6px;pointer-events:none;
+  background: url('https://www.transparenttextures.com/patterns/brick-wall.png'), linear-gradient(#eaf6ff,#dbeefc);
+  background-size: 200px 200px, cover;
+  z-index:2;}
+.jerry{position:absolute;top:2px;left:50%;transform:translateX(-50%);width:60px;height:60px; margin-top: 5px; pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:15;}
+.currentDrop{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:#fff;
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  top:64px; /* 8px (jerrycan top) + 56px (jerrycan height) */
+  pointer-events:none;
+  z-index:16;
+}
+.pauseOverlay{position:absolute;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;display:none;border-radius:6px;z-index:20;}
+
+footer{margin-top:16px;text-align:center;color:#666;font-size:13px;}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:60;}
+.cardModal{background:#fff9e8;padding:18px;border-radius:10px;max-width:680px;width:92%;border:2px solid #ffc907;}
+.cardModal{background:#fff9e8;padding:18px;border-radius:10px;max-width:680px;width:92%;border:2px solid #ffc907;color:#1a1a1a;}
+.cardModal.gameOverModal{
+  max-width:340px;
+  width:96%;
+}
+.title{font-size:26px;font-weight:800;margin-bottom:8px;}
+.instructions{background:#FFF7E1;padding:10px;border-radius:8px;margin-bottom:12px;}
+.instructions{background:#FFF7E1;padding:10px;border-radius:8px;margin-bottom:12px;color:#1a1a1a;}
+.title{font-size:26px;font-weight:800;margin-bottom:8px;color:#1a1a1a;}
+.small{font-size:13px;color:#666;}
+.small{font-size:13px;color:#1a1a1a;}
+.listDropOrder{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;}
+.orderItem{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;}
+
+.hidden{display:none;}
+.modal .modalControls{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+
+/* Responsive */
+@media (max-width:760px){
+  #canvasWrap{height:504px;}
+  .title{font-size:20px}
+}

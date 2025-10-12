@@ -1,13 +1,120 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charity Water Game</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Charity Drops — Merge Game</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Matter.js physics engine -->
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 </head>
 <body>
-    <h1>Welcome to the Charity Water Game Prototype</h1>
-    <script src="script.js"></script>
+  <div class="container">
+    <main id="gameArea">
+      <div class="topRow">
+        <div class="topLeft">
+          <div class="hud">
+            <div class="card">Score: <span id="score">0</span></div>
+            <div class="card">High: <span id="highscore">0</span></div>
+          </div>
+          <div class="previewBox">
+            <div class="label">Next</div>
+            <div id="nextPreview" class="previewCircle" aria-hidden="true"></div>
+          </div>
+          <div class="controls">
+            <button id="settingsBtn" class="settingsBtn" title="Settings"><i class="fa-solid fa-gear" style="color: #1a1a1a;"></i></button>
+            <button id="restartBtn" class="settingsBtn" title="Restart"><i class="fa-solid fa-rotate-right" style="color: #1a1a1a;"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="canvasWrap">
+        <div id="wellBox" class="wellBox"></div>
+        <div id="jerry" class="jerry"></div>
+        <div id="currentDrop" class="currentDrop"></div>
+        <canvas id="gameCanvas" width="820" height="624" style="position:absolute;left:0;top:0;z-index:10;"></canvas>
+        <div id="pauseOverlay" class="pauseOverlay">PAUSED</div>
+      </div>
+    </main>
+
+    <footer>
+  <img src="img/cw_logo_horizontal.png" alt="charity: water logo" style="height:28px;vertical-align:middle;margin-bottom:6px;">
+    </footer>
+  </div>
+
+  <!-- Title / instructions modal -->
+  <div id="titleModal" class="modal">
+    <div class="cardModal">
+      <div class="title">Every Drop Counts</div>
+      <div class="instructions">
+        <div class="small">Who is charity: water?</div>
+        <ol>
+          This game is brought to you in partnership with charity: water, a nonprofit on a mission to bring clean, safe drinking water to people in need around the world. Just $40 can supply one person with clean water for a year, but every donation makes a difference. Donate today, and help change lives!
+        </ol>
+        <div style="margin:12px 0 18px 0;text-align:center;">
+          <a href="https://www.charitywater.org" target="_blank" style="display:inline-block;background:#FFC907;color:#1c2a37;font-weight:700;padding:10px 28px;border-radius:8px;text-decoration:none;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:background 0.2s;">Donate</a>
+        </div>
+        <div class="small">Instructions</div>
+        <ol>
+          <li>Move the jerrycan with with your arrow keys or by clicking. Click inside the well or press SPACE to drop the current drop.</li>
+          <li>When two drops of the same size and color touch, they merge into the next largest drop.</li>
+          <li>If the well fills and a drop sits above the top boundary, the game ends.</li>
+        </ol>
+        <div class="small">Scoring: merges award points (bigger merges = more points).</div>
+        <div class="listDropOrder" id="dropOrderPreview"></div>
+      </div>
+
+      <div class="modalControls">
+        <label><input type="checkbox" id="cbMode"> Color-blind mode (label drops with numbers)</label>
+        <button id="startBtn" class="startBtn">START GAME</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="cardModal">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="title" style="font-size:18px">Settings</div>
+        <button id="closeSettings" class="settingsBtn">✕</button>
+      </div>
+      <div style="margin-top:8px">
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="cbModeSettings"> Color-blind mode</label>
+      </div>
+      <div style="margin-top:8px">
+        <label><input type="checkbox" id="soundToggle" checked> Sound</label>
+      </div>
+      <div style="margin-top:12px;text-align:right">
+        <button id="closeSettingsBtn" class="startBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game over modal -->
+  <div id="gameOverModal" class="modal hidden">
+    <div class="cardModal gameOverModal">
+      <div class="title">Game Over:</div>
+      <div style="font-size:18px;margin:8px 0;text-align:center">Your Score: <span id="finalScore">0</span></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <button id="goHomeBtn" class="settingsBtn">Home</button>
+        <button id="restartGameBtn" class="startBtn">Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="winModal" class="modal hidden">
+    <div class="cardModal" style="max-width:340px;width:96%;text-align:center;">
+      <div class="title">Congratulations!</div>
+      <div style="font-size:18px;margin:12px 0;">You reached the 9th drop, please consider donating today!</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <button id="winHomeBtn" class="settingsBtn">Home</button>
+        <button id="winRestartBtn" class="startBtn">Restart</button>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script src="confetti.js"></script>
 </body>
 </html>
