@@ -18,6 +18,11 @@
           <div class="hud">
             <div class="card">Score: <span id="score">0</span></div>
             <div class="card">High: <span id="highscore">0</span></div>
+            <!-- Hard-mode timer (only visible when Hard difficulty is selected) -->
+            <div class="card" id="hardTimer" style="display:none;align-items:center;gap:8px;">
+              <span style="font-weight:700;font-size:14px;">Timer</span>
+              <span id="decisionTimer" style="font-size:16px;">7.0s</span>
+            </div>
           </div>
           <div class="previewBox">
             <div class="label">Next</div>
@@ -59,11 +64,22 @@
         <div class="small">Instructions</div>
         <ol>
           <li>Move the jerrycan with with your arrow keys or by clicking. Click inside the well or press SPACE to drop the current drop.</li>
-          <li>When two drops of the same size and color touch, they merge into the next largest drop.</li>
+          <li>When two water drops of the same size and color touch, they merge into the next largest drop. </li>
           <li>If the well fills and a drop sits above the top boundary, the game ends.</li>
         </ol>
         <div class="small">Scoring: merges award points (bigger merges = more points).</div>
         <div class="listDropOrder" id="dropOrderPreview"></div>
+        <!-- Difficulty options: Normal / Hard (checkboxes, mutually exclusive) -->
+        <div style="margin-top:12px;text-align:center;display:flex;gap:12px;justify-content:center;align-items:center;">
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="difficultyNormal" />
+            <span>Normal</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="difficultyHard" />
+            <span>Hard</span>
+          </label>
+        </div>
       </div>
 
       <div class="modalControls">

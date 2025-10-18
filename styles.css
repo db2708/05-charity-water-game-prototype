@@ -1,3 +1,5 @@
+/* Load Montserrat from Google Fonts as an immediate, free substitute for Proxima Nova */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap');
 
 /* Home button in game over popup */
 #gameOverModal .settingsBtn {
@@ -29,13 +31,26 @@ Secondary Colors:
   --text:#1c2a37;
 }
 *{box-sizing:border-box}
+
 html,body{
   height:100%;
   margin:0;
   background:rgba(255,247,225,0.5);
-  font-family:Inter, system-ui, Arial, sans-serif;
+  /* Use Montserrat (Google Fonts) as the visible font; Proxima Nova remains in stack if you later self-host it */
+  font-family: 'Montserrat', 'Proxima Nova', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color:var(--text);
 }
+
+/* Optional: load Proxima Nova if you have a hosted font or use a webfont provider */
+/* Example (uncomment and provide a valid URL):
+@font-face {
+  font-family: 'Proxima Nova';
+  src: url('/path/to/ProximaNova.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+*/
 .container{
   max-width:920px;
   margin:20px auto;
@@ -147,6 +162,20 @@ header{
   gap: 10px;
   flex-wrap: nowrap;
   align-items: center;
+}
+
+/* Hard-mode HUD timer styling */
+#hardTimer{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 10px;
+  min-width:80px;
+}
+#decisionTimer{
+  font-variant-numeric: tabular-nums;
+  transition: color 120ms linear;
+  font-weight: 400;
 }
 
 .previewBox {
@@ -395,4 +424,12 @@ footer{
     padding: 8px;
     font-size: 14px;
   }
+}
+
+#canvasWrap { position: relative; }
+/* DOM drop visual (overlay on canvas) */
+.domDrop{
+  box-shadow: 0 6px 10px rgba(0,0,0,0.08);
+  z-index: 12;
+  font-family: inherit; /* ensure any text inside drops uses the app font */
 }

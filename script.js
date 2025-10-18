@@ -1,3 +1,6 @@
+// Cooldown for drop placement
+  let lastDropTime = 0;
+  const DROP_COOLDOWN = 600; // ms
 /* script.js
    Charity Drops — suika-style merge game
    Basic physics, merging, preview, settings, score, game-over
@@ -18,6 +21,10 @@
   const startBtn = document.getElementById('startBtn');
   const cbModeCheckbox = document.getElementById('cbMode');
   const dropOrderPreview = document.getElementById('dropOrderPreview');
+  const difficultyNormal = document.getElementById('difficultyNormal');
+  const difficultyHard = document.getElementById('difficultyHard');
+  const hardTimerEl = document.getElementById('hardTimer');
+  const decisionTimerEl = document.getElementById('decisionTimer');
 
   const settingsModal = document.getElementById('settingsModal');
   const settingsBtn = document.getElementById('settingsBtn');
@@ -96,6 +103,14 @@
   // Load settings from localStorage
   let cbMode = localStorage.getItem('cw_cbMode') === 'true';
   let soundEnabled = localStorage.getItem('cw_soundEnabled') !== 'false';
+  // difficulty: 'normal' or 'hard' (normal is default)
+  let difficulty = localStorage.getItem('cw_difficulty') || 'normal';
+
+  // Hard-mode decision timer (10 seconds)
+  const DECISION_TIMEOUT = 10000; // ms
+  let decisionTimerId = null;
+  let decisionIntervalId = null;
+  let decisionStartTime = 0;
 
   // jerry position
   let jerryX = well.x + well.width/2;
@@ -179,14 +194,12 @@
   }
   function createDrop(size,x,y){
     // Create a Matter.js circle body for the drop
-    // Lower friction and frictionAir so drops roll off each other faster
     const radius = radiusForSize(size);
-    // Increase friction for more ball-to-ball resistance
-      const body = Bodies.circle(x, y, radius, {
-        restitution: 0.25, // higher bounce, less squish
-        friction: 0.080,    // more resistance to sliding
-        frictionStatic: 0.6, // more resistance to compression
-        frictionAir: 0.01, // less air drag
+    const body = Bodies.circle(x, y, radius, {
+      restitution: 0.25,
+      friction: 0.080,
+      frictionStatic: 0.6,
+      frictionAir: 0.01,
       label: 'drop',
       render: { fillStyle: colorForSize(size) }
     });
@@ -195,6 +208,32 @@
     body.color = colorForSize(size);
     body.id = Math.random().toString(36).slice(2,8);
     World.add(world, body);
+
+    // --- DOM representation for the drop so we can add/remove elements on interactions ---
+    const dropEl = document.createElement('div');
+    dropEl.className = 'domDrop';
+    dropEl.dataset.id = body.id;
+    // visual sizing and color (absolute positioned inside #canvasWrap)
+    dropEl.style.position = 'absolute';
+    dropEl.style.width = (radius*2) + 'px';
+    dropEl.style.height = (radius*2) + 'px';
+    dropEl.style.borderRadius = '50%';
+    dropEl.style.background = body.color;
+    dropEl.style.pointerEvents = 'auto'; // allow clicks if desired
+    // optional: show number in color-blind mode
+    if(cbMode) {
+      dropEl.style.color = '#fff';
+      dropEl.style.fontWeight = '700';
+      dropEl.style.display = 'flex';
+      dropEl.style.alignItems = 'center';
+      dropEl.style.justifyContent = 'center';
+      dropEl.textContent = String(body.size);
+    }
+    // place under #canvasWrap so it matches canvas coordinates
+    const canvasWrap = document.getElementById('canvasWrap');
+    canvasWrap.appendChild(dropEl);
+    body._domEl = dropEl; // link for later removal/update
+
     return body;
   }
 
@@ -248,6 +287,52 @@
   updatePreviewUI();
   renderDropOrderPreview();
   renderJerry();
+  // Initialize difficulty checkbox states and handlers
+  if (typeof difficultyNormal !== 'undefined' && typeof difficultyHard !== 'undefined') {
+    // Set initial checked state
+    difficultyNormal.checked = (difficulty === 'normal');
+    difficultyHard.checked = (difficulty === 'hard');
+
+    // When normal is clicked, ensure hard is unchecked and persist
+    difficultyNormal.addEventListener('change', () => {
+      if (difficultyNormal.checked) {
+        difficulty = 'normal';
+        difficultyHard.checked = false;
+      } else {
+        // Prevent both unchecked: at least one should be selected
+        difficultyNormal.checked = true;
+        difficulty = 'normal';
+      }
+      localStorage.setItem('cw_difficulty', difficulty);
+      // Update timer visibility/state
+      if(difficulty === 'hard'){
+        if(running && !paused) startDecisionTimer();
+        if(hardTimerEl) hardTimerEl.style.display = 'flex';
+      } else {
+        stopDecisionTimer();
+        if(hardTimerEl) hardTimerEl.style.display = 'none';
+      }
+    });
+
+    // When hard is clicked, ensure normal is unchecked and persist
+    difficultyHard.addEventListener('change', () => {
+      if (difficultyHard.checked) {
+        difficulty = 'hard';
+        difficultyNormal.checked = false;
+      } else {
+        // Prevent both unchecked
+        difficultyHard.checked = true;
+        difficulty = 'hard';
+      }
+      localStorage.setItem('cw_difficulty', difficulty);
+      // Update timer visibility/state
+      if(difficulty === 'hard'){
+        if(running && !paused) startDecisionTimer();
+      } else {
+        stopDecisionTimer();
+      }
+    });
+  }
   // Sync checkboxes to stored settings
   if(typeof cbModeCheckbox !== 'undefined') cbModeCheckbox.checked = cbMode;
   if(typeof cbModeSettings !== 'undefined') cbModeSettings.checked = cbMode;
@@ -258,6 +343,57 @@
   pauseOverlay.style.display = 'none';
   running = false;
   paused = false;
+  }
+
+  // Expose difficulty getter for future use
+  function getDifficulty(){ return difficulty; }
+
+  // --- Hard-mode decision timer helpers ---
+  function startDecisionTimer(){
+    stopDecisionTimer();
+    decisionStartTime = Date.now();
+    decisionTimerId = setTimeout(()=>{
+      onDecisionTimeout();
+    }, DECISION_TIMEOUT);
+    // interval for UI updates (updates visible countdown)
+    if(decisionTimerEl){
+      decisionIntervalId = setInterval(()=>{
+        const elapsed = Date.now() - decisionStartTime;
+        const remaining = Math.max(0, DECISION_TIMEOUT - elapsed) / 1000;
+        decisionTimerEl.textContent = remaining.toFixed(1) + 's';
+        // flash color when close to zero
+        if(remaining <= 2) decisionTimerEl.style.color = '#e23b3b'; else decisionTimerEl.style.color = '';
+      }, 120);
+    }
+  }
+  function stopDecisionTimer(){
+    if(decisionTimerId){ clearTimeout(decisionTimerId); decisionTimerId = null; }
+    if(decisionIntervalId){ clearInterval(decisionIntervalId); decisionIntervalId = null; }
+    decisionStartTime = 0;
+    if(decisionTimerEl) decisionTimerEl.textContent = DECISION_TIMEOUT/1000 + 's';
+  }
+  function onDecisionTimeout(){
+    // remove a random drop that is inside the well area
+    const candidates = dropBodies.filter(b => {
+      return b.position.x >= well.x && b.position.x <= (well.x + well.width) && b.position.y >= well.y && b.position.y <= (well.y + well.height + 40);
+    });
+    if(candidates.length > 0){
+      const idx = Math.floor(Math.random() * candidates.length);
+      const victim = candidates[idx];
+      // remove DOM element if present
+      if(victim._domEl && victim._domEl.parentNode) victim._domEl.remove();
+      // remove physics body
+      World.remove(world, victim);
+      // remove from dropBodies array
+      const i = dropBodies.findIndex(d => d.id === victim.id);
+      if(i >= 0) dropBodies.splice(i,1);
+    }
+    // restart timer for next decision if still in hard mode and running
+    if(difficulty === 'hard' && running && !paused){
+      startDecisionTimer();
+    } else {
+      stopDecisionTimer();
+    }
   }
 
   function fitCanvas(){
@@ -317,10 +453,17 @@
     paused = false;
     lastTime = performance.now();
     requestAnimationFrame(loop);
+    // Show/hide HUD timer immediately based on difficulty
+    if(hardTimerEl) hardTimerEl.style.display = (difficulty === 'hard') ? 'flex' : 'none';
+    if(difficulty === 'hard') startDecisionTimer();
   }
 
   function placeDropAt(x){
-    if(paused || !running) return;
+  if(paused || !running) return;
+  // Prevent placing a drop if cooldown not finished
+  const now = Date.now();
+  if (now - lastDropTime < DROP_COOLDOWN) return;
+  lastDropTime = now;
   // Constrain within well bounds using the current drop's radius
   const radius = radiusForSize(currentDropSize);
   const minx = well.x + radius;
@@ -335,6 +478,11 @@
     currentDropSize = nextDropSize;
     nextDropSize = randWeightedSize();
     updatePreviewUI();
+    // restart decision timer for hard mode
+    if(difficulty === 'hard'){
+      stopDecisionTimer();
+      startDecisionTimer();
+    }
   }
 
   function restartGame(fullReset=true){
@@ -356,6 +504,9 @@
     paused = false;
     pauseOverlay.style.display = 'none';
     gameOverModal.classList.add('hidden');
+    // reset decision timer
+    stopDecisionTimer();
+    if(difficulty === 'hard' && running) startDecisionTimer();
     if(fullReset){
       // reset highscore left intact
     }
@@ -388,6 +539,11 @@
           const newX = (A.position.x + B.position.x)/2;
           const newY = (A.position.y + B.position.y)/2;
           const newDrop = createDrop(newSize, newX, newY);
+
+          // remove DOM elements for A and B if present
+          if(A._domEl && A._domEl.parentNode) A._domEl.remove();
+          if(B._domEl && B._domEl.parentNode) B._domEl.remove();
+
           World.remove(world, A);
           World.remove(world, B);
           dropBodies.splice(j,1);
@@ -435,9 +591,11 @@
   function render(){
     ctx.clearRect(0,0,W,H);
     // draw drops using Matter.js positions
-    // sort by y for painter's order
     const sorted = dropBodies.slice().sort((a,b)=>a.position.y-b.position.y);
     for(let d of sorted){
+      // If a DOM element exists for this drop we will use the DOM for visuals
+      // and skip drawing it on the canvas to avoid duplicate visuals.
+      if (d._domEl) continue;
       // shadow
       ctx.beginPath();
       ctx.ellipse(d.position.x, d.position.y + d.radius*0.4, d.radius*0.95, d.radius*0.45, 0, 0, Math.PI*2);
@@ -466,13 +624,27 @@
       }
     }
 
+    // update DOM drop elements to match physics bodies
+    for(const b of dropBodies){
+      if(b._domEl){
+        // convert physics position to canvasWrap coordinates
+        // canvas is positioned absolutely with same W,H; canvasWrap left/top 0 inside container
+        const left = (b.position.x - b.radius);
+        const top = (b.position.y - b.radius);
+        b._domEl.style.left = left + 'px';
+        b._domEl.style.top = top + 'px';
+        // keep consistent size (in case radius changed)
+        b._domEl.style.width = (b.radius*2) + 'px';
+        b._domEl.style.height = (b.radius*2) + 'px';
+        if(cbMode) b._domEl.textContent = String(b.size);
+      }
+    }
 
-
-  // update DOM jerry position
-  jerryEl.style.left = (jerryX - 56) + 'px';
-  // update current drop position to follow jerrycan
-  const dropSize = Math.max(28, radiusForSize(currentDropSize)*1.5);
-  currentDropEl.style.left = (jerryX - dropSize) + 'px';
+    // update DOM jerry position
+    jerryEl.style.left = (jerryX - 56) + 'px';
+    // update current drop position to follow jerrycan
+    const dropSize = Math.max(28, radiusForSize(currentDropSize)*1.5);
+    currentDropEl.style.left = (jerryX - dropSize) + 'px';
   }
 
   // --- Main loop ---
@@ -599,6 +771,8 @@
     paused = !paused;
     pauseOverlay.style.display = paused ? 'flex' : 'none';
     if(!paused) { lastTime = performance.now(); }
+    // pause/resume decision timer
+    if(paused){ stopDecisionTimer(); } else { if(difficulty === 'hard' && running) startDecisionTimer(); }
   }
   // easy pause from UI
   pauseOverlay.addEventListener('click', togglePause);
